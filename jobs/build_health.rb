@@ -1,13 +1,13 @@
-SUCCESS = 'Successful'
-FAILED = 'Failed'
+SUCCESS = 'Successful'.freeze
+FAILED = 'Failed'.freeze
 
 def api_functions
-  return {
-    'Travis' => lambda { |build_id| get_travis_build_health build_id},
-    'TeamCity' => lambda { |build_id| get_teamcity_build_health build_id},
-    'Bamboo' => lambda { |build_id| get_bamboo_build_health build_id},
-    'Go' => lambda { |build_id| get_go_build_health build_id},
-    'Jenkins' => lambda { |build_id| get_jenkins_build_health build_id}
+  {
+    'Travis' => ->(build_id) { get_travis_build_health build_id },
+    'TeamCity' => ->(build_id) { get_teamcity_build_health build_id },
+    'Bamboo' => ->(build_id) { get_bamboo_build_health build_id },
+    'Go' => ->(build_id) { get_go_build_health build_id },
+    'Jenkins' => ->(build_id) { get_jenkins_build_health build_id }
   }
 end
 
@@ -20,16 +20,14 @@ def get_url(url, auth = nil)
   end
   request = Net::HTTP::Get.new(uri.request_uri)
 
-  if auth != nil then
-    request.basic_auth *auth
-  end
+  request.basic_auth(*auth) unless auth.nil?
 
   response = http.request(request)
-  return JSON.parse(response.body)
+  JSON.parse(response.body)
 end
 
 def calculate_health(successful_count, count)
-  return (successful_count / count.to_f * 100).round
+  (successful_count / count.to_f * 100).round
 end
 
 def get_build_health(build)
@@ -41,7 +39,7 @@ def get_teamcity_build_health(build_id)
   latest_build = TeamCity.build(id: builds.first['id'])
   successful_count = builds.count { |build| build['status'] == 'SUCCESS' }
 
-  return {
+  {
     name: latest_build['buildType']['name'],
     status: latest_build['status'] == 'SUCCESS' ? SUCCESS : FAILED,
     link: builds.first['webUrl'],
@@ -52,12 +50,12 @@ end
 def get_travis_build_health(build_id)
   url = "https://api.travis-ci.org/repos/#{build_id}/builds?event_type=push"
   results = get_url url
-  successful_count = results.count { |result| result['result'] == 0 }
+  successful_count = results.count { |result| (result['result']).zero? }
   latest_build = results[0]
 
-  return {
+  {
     name: build_id,
-    status: latest_build['result'] == 0 ? SUCCESS : FAILED,
+    status: (latest_build['result']).zero? ? SUCCESS : FAILED,
     duration: latest_build['duration'],
     link: "https://travis-ci.org/#{build_id}/builds/#{latest_build['id']}",
     health: calculate_health(successful_count, results.count),
@@ -66,15 +64,13 @@ def get_travis_build_health(build_id)
 end
 
 def get_go_pipeline_status(pipeline)
-  return pipeline['stages'].index { |s| s['result'] == 'Failed' } == nil ? SUCCESS : FAILED
+  pipeline['stages'].index { |s| s['result'] == 'Failed' }.nil? ? SUCCESS : FAILED
 end
 
 def get_go_build_health(build_id)
   url = "#{Builds::BUILD_CONFIG['goBaseUrl']}/go/api/pipelines/#{build_id}/history"
 
-  if ENV['GO_USER'] != nil then
-    auth = [ ENV['GO_USER'], ENV['GO_PASSWORD'] ]
-  end
+  auth = ENV['GO_USER'].nil? ? nil : [ENV['GO_USER'], ENV['GO_PASSWORD']]
 
   build_info = get_url url, auth
 
@@ -82,11 +78,11 @@ def get_go_build_health(build_id)
   successful_count = results.count { |result| get_go_pipeline_status(result) == SUCCESS }
   latest_pipeline = results[0]
 
-  return {
+  {
     name: latest_pipeline['name'],
     status: get_go_pipeline_status(latest_pipeline),
     link: "#{Builds::BUILD_CONFIG['goBaseUrl']}/go/tab/pipeline/history/#{build_id}",
-    health: calculate_health(successful_count, results.count),
+    health: calculate_health(successful_count, results.count)
   }
 end
 
@@ -98,7 +94,7 @@ def get_bamboo_build_health(build_id)
   successful_count = results.count { |result| result['state'] == 'Successful' }
   latest_build = results[0]
 
-  return {
+  {
     name: latest_build['plan']['shortName'],
     status: latest_build['state'] == 'Successful' ? SUCCESS : FAILED,
     duration: latest_build['buildDurationDescription'],
@@ -109,18 +105,16 @@ def get_bamboo_build_health(build_id)
 end
 
 def get_jenkins_build_health(build_id)
-  url = "#{Builds::BUILD_CONFIG['jenkinsBaseUrl']}/job/#{build_id}/api/json?tree=builds[status,timestamp,id,result,duration,url,fullDisplayName]"
+  url = "#{ENV['JENKINS_URL']}/job/#{build_id}/api/json?tree=builds[status,timestamp,id,result,duration,url,fullDisplayName]"
 
-  if ENV['JENKINS_USER'] != nil then
-    auth = [ ENV['JENKINS_USER'], ENV['JENKINS_TOKEN'] ]
-  end
+  auth = ENV['JENKINS_USER'].nil? ? nil : [ENV['JENKINS_USER'], ENV['JENKINS_TOKEN']]
 
   build_info = get_url URI.encode(url), auth
   builds = build_info['builds']
-  builds_with_status = builds.select { |build| !build['result'].nil? }
+  builds_with_status = builds.reject { |build| build['result'].nil? }
   successful_count = builds_with_status.count { |build| build['result'] == 'SUCCESS' }
   latest_build = builds_with_status.first
-  return {
+  {
     name: latest_build['fullDisplayName'],
     status: latest_build['result'] == 'SUCCESS' ? SUCCESS : FAILED,
     duration: latest_build['duration'] / 1000,

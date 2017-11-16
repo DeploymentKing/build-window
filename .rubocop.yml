@@ -1,0 +1,48 @@
+Style/FileName:
+  Enabled: false
+
+Style/ConditionalAssignment:
+  Enabled: false
+
+Style/MethodMissing:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/LineLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/BlockNesting:
+  Enabled: false
+
+Metrics/BlockLength:
+  Max: 400
+
+Bundler/OrderedGems:
+  Enabled: false
+
+# Exclude the symlinked endpoints; the check is redundant
+AllCops:
+  Exclude:
+    - br0*.rb
+    - re0*.rb
+    - sp0*.rb
