@@ -1,65 +1,48 @@
 # Build Window
 
-[![Build Status](https://travis-ci.org/rouanw/build-window.svg?branch=master)](https://travis-ci.org/rouanw/build-window)
-[![GitHub license](https://img.shields.io/github/license/rouanw/build-window.svg)](https://github.com/rouanw/build-window/blob/master/LICENSE)
-
-Dashboard built using [Dashing](http://shopify.github.com/dashing). Currently supports Jenkins, Travis, TeamCity, Bamboo and Go.
-
-## Example
-
-![Alt text](http://rouanw.github.io/images/build_health_screenshot.png "Example build dashboard")
+Dashboard built using [Smashing](https://github.com/Smashing/smashing). Currently supports Jenkins.
 
 ## Getting started
 
 Run `bundle install`.
 
-Edit `config/builds.json` with the configuration for your builds:
+Edit `config/jenkins.json` with the configuration for your builds:
 
 ```
 {
-  "bambooBaseUrl": "https://ci.openmrs.org",
-  "teamCityBaseUrl": "https://teamcity.jetbrains.com",
-  "goBaseUrl":"https://build.go.cd",
-  "jenkinsBaseUrl": "https://builds.apache.org",
-  "builds": [
-    {"id": "sinatra/sinatra", "server": "Travis"},
-    {"id": "IntelliJIdeaCe_CommunityTestsLinuxJava8", "server": "TeamCity"},
-    {"id": "Lucene-Solr-Maven-5.4", "server": "Jenkins"},
-    {"id": "BB-BDB", "server": "Bamboo"},
-    {"id": "build-linux", "server": "Go"}
+  "servers": [
+    {
+      "id": "project1",
+      "user": "readonly",
+      "token": "<jenkins API token here>",
+      "url": "https://jenkins.project1.com"
+    },
+    {
+      "id": "project2",
+      "user": "readonly",
+      "token": "<jenkins API token here>",
+      "url": "https://jenkins.project2.com"
+    }
   ]
 }
 ```
 
-Place your API credentials in a `.env` file at the root of the project. (Please note that authentication is currently only supported for Go CD.) Example:
+Place your `VAULT_PASSWORD` credentials in a `.env` file at the root of the project.
+The project uses a Gem that utilises the Ansible Vault functionality.
+Create your own config file and run `ansible-vault encrypt config/jenkins.json` supplying your own password as appropriate.
 
-```
-GO_USER=view
-GO_PASSWORD=password
-```
+Run `smashing start`.
 
-Run `dashing start`.
-
-Runs at `http://localhost:3030/builds` by default.
-
-Run `dashing start -d -p 3031` to run it as a daemon and to specify the port. You can stop the daemon with `dashing stop`.
-
-See https://github.com/Shopify/dashing/wiki for more details.
+Navigate to the following url `http://localhost:3030/_cycle?duration=30`.
 
 ## Docker support
 
 You can spin up a Docker container with build-window by running:
 
-`docker-compose up -d`
+`docker-compose up -d --build`
 
 The application will be ready at `http://localhost:3030` (Linux) or at `http://<DOCKER_HOST_IP>:3030` (Windows/OS X).
 
-You can also build the image and run a container separately, but [Docker Compose](https://docs.docker.com/compose/install/) makes this process much simpler.
-
-## Contributing
-
-Pull requests welcome. Run the tests with `rspec`.
-
 ## Contributions
 
-Thanks to Max Lincoln ([@maxlinc](https://github.com/maxlinc)) for coming up with the name __Build Window__.
+Shamelessly ripped off from [Rouan Wilsenach](https://github.com/rouanw/build-window).
