@@ -39,10 +39,3 @@ Metrics/BlockLength:
 
 Bundler/OrderedGems:
   Enabled: false
-
-# Exclude the symlinked endpoints; the check is redundant
-AllCops:
-  Exclude:
-    - br0*.rb
-    - re0*.rb
-    - sp0*.rb
