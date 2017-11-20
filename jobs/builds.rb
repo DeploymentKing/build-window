@@ -1,31 +1,39 @@
+require 'ansible/vault'
+
 # The Builds class will extract all the builds to display on the dashboard
 module Builds
-  @builds = []
+  @jobs = []
 
-  def get_jenkins_jobs(parent_job_url)
-    url = parent_job_url.nil? ? "#{ENV['JENKINS_URL']}/job/#{ENV['JENKINS_PROJECT']}/api/json" : "#{parent_job_url}api/json"
+  def get_jenkins_jobs(server_url, project, user, token, parent_job_url)
+    url = parent_job_url.nil? ? "#{server_url}/job/#{project}/api/json" : "#{parent_job_url}api/json"
 
-    unless ENV['JENKINS_USER'].nil?
-      auth = [ENV['JENKINS_USER'], ENV['JENKINS_TOKEN']]
-    end
-
-    job_info = get_url URI.encode(url), auth
+    job_info = get_url url, [user, token]
     jobs = job_info['jobs']
 
     if jobs.nil?
       # There are no more sub-jobs so we can extract the build information from here
-      @builds << { 'id' => parent_job_url.gsub("#{ENV['JENKINS_URL']}/job/", ''), 'server' => 'Jenkins' }
+      @jobs << {
+        'id' => parent_job_url.gsub("#{server_url}/job/", ''),
+        'project' => project,
+        'server_url' => server_url,
+        'user' => user,
+        'token' => token
+      }
     else
       jobs.each do |job|
-        get_jenkins_jobs(job['url'])
+        get_jenkins_jobs(server_url, project, user, token, job['url'])
       end
     end
   end
   module_function :get_jenkins_jobs
 
-  get_jenkins_jobs(nil)
+  contents = Ansible::Vault.read(path: 'config/jenkins.json', password: ENV['VAULT_PASSWORD'])
+  JENKINS_CONFIG = JSON.parse(contents)
+  JENKINS_SERVERS = JENKINS_CONFIG['servers']
 
-  BUILD_CONFIG = JSON.parse(File.read('config/builds.json'))
-  BUILD_LIST = @builds
-  BUILD_PROJECT = ENV['JENKINS_PROJECT'].to_s.camelize
+  JENKINS_SERVERS.each do |server|
+    get_jenkins_jobs(server['url'], server['id'], server['user'], server['token'], nil)
+  end
+
+  JOB_LIST = @jobs
 end

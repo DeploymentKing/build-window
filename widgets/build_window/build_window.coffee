@@ -6,6 +6,7 @@ Batman.Filters.durationFormat = (duration) ->
 
 class Dashing.BuildWindow extends Dashing.Widget
   onData: (data) ->
+#    debugger
     if data.status == 'Failed'
       $(@node).css('background-color', '#a73737')
     else if data.status == 'Successful'

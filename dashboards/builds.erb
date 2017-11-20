@@ -1,9 +1,9 @@
 <% content_for :title do %>Build Health<% end %>
-<h1>Jenkins Build Monitor - <%= Builds::BUILD_PROJECT %> Project</h1>
+<h1>Jenkins Build Monitor - <%= (File.basename(__FILE__, File.extname(__FILE__))).to_s.camelize %> Project</h1>
 <div class="gridster">
   <ul>
     <%
-      if (Builds::BUILD_LIST.count > 4) then
+      if (Builds::JOB_LIST.count > 4) then
         num_cols = 4
         widget_size = 1
       else
@@ -11,12 +11,12 @@
         widget_size = 2
       end
     %>
-    <% Builds::BUILD_LIST.each_with_index do |build, index| %>
+    <% Builds::JOB_LIST.select { |job|job['project'] == File.basename(__FILE__, File.extname(__FILE__)) }.each_with_index do |job,index| %>
       <% build_num = index + 1 %>
       <li data-row="<%= build_num % num_cols == 0 ? build_num / num_cols : build_num / num_cols + 1 %>"
         data-col="<%= build_num % num_cols == 0 ? num_cols : build_num % num_cols %>"
         data-sizex="<%= widget_size %>" data-sizey="1">
-        <div data-id="<%= build['id'] %>" data-server="<%= build['server'] %>"
+        <div data-id="<%= job['id'] %>" data-server="<%= job['project'] %>"
           data-view="BuildWindow"></div>
       </li>
     <% end %>

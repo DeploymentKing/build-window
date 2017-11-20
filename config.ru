@@ -1,6 +1,4 @@
-require 'dotenv'
-Dotenv.load
-
+require 'sinatra/cyclist'
 require 'dashing'
 
 configure do
@@ -18,11 +16,6 @@ map Sinatra::Application.assets_prefix do
   run Sinatra::Application.sprockets
 end
 
-if Builds::BUILD_CONFIG['teamCityBaseUrl']
-  require 'teamcity'
-  TeamCity.configure do |config|
-    config.endpoint = Builds::BUILD_CONFIG['teamCityBaseUrl'] + '/app/rest?guest=1'
-  end
-end
+set :routes_to_cycle_through, [:audi, :blackout]
 
 run Sinatra::Application
