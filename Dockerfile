@@ -1,6 +1,6 @@
 FROM alpine
 
-MAINTAINER SomoGlobal DevOps <devops@somoglobal.com>
+MAINTAINER Lee Myring <mail@thinkstack.io>
 
 ENV PORT 3030
 EXPOSE $PORT
@@ -15,3 +15,5 @@ RUN apk update && \
 COPY . /build-window
 WORKDIR /build-window
 RUN bundle install
+
+ENTRYPOINT smashing start
