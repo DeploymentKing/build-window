@@ -1,4 +1,5 @@
 require 'ansible/vault'
+require_relative 'build_health'
 
 # The Builds class will extract all the builds to display on the dashboard
 module Builds
