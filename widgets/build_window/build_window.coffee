@@ -11,6 +11,8 @@ class Dashing.BuildWindow extends Dashing.Widget
       $(@node).css('background-color', '#a73737')
     else if data.status == 'Successful'
       $(@node).css('background-color', '#03A06E')
+    else if data.status == 'No Builds'
+      $(@node).css('background-color', '#808080')
 
   @accessor 'image', ->
     health = @get('health')

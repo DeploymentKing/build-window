@@ -3,21 +3,21 @@ GEM
   specs:
     ansible-vault (0.2.1)
       oroku_saki (~> 1.1)
-    backports (3.10.3)
+    backports (3.11.0)
     coffee-script (2.2.0)
       coffee-script-source
       execjs
     coffee-script-source (1.12.2)
-    daemons (1.2.5)
+    daemons (1.2.6)
     eventmachine (1.2.5)
     execjs (2.0.2)
     hike (1.2.3)
-    multi_json (1.12.2)
+    multi_json (1.13.1)
     oroku_saki (1.1.1)
     rack (1.5.5)
     rack-protection (1.5.3)
       rack
-    rack-test (0.8.0)
+    rack-test (0.8.2)
       rack (>= 1.0, < 3)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
@@ -66,9 +66,9 @@ PLATFORMS
 
 DEPENDENCIES
   ansible-vault
-  sinatra
-  sinatra_cyclist
+  sinatra (= 1.4.8)
+  sinatra_cyclist (= 0.0.3)
   smashing
 
 BUNDLED WITH
-   1.16.0
+   1.16.1

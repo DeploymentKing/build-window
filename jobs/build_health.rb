@@ -1,5 +1,6 @@
 SUCCESS = 'Successful'.freeze
 FAILED = 'Failed'.freeze
+UNKNOWN = 'No Builds'.freeze
 
 def get_url(url, auth)
   uri = URI.parse(url)
@@ -25,17 +26,29 @@ def get_jenkins_build_health(job)
 
   build_info = get_url url, [job['user'], job['token']]
   builds = build_info['builds']
-  builds_with_status = builds.reject { |build| build['result'].nil? }
-  successful_count = builds_with_status.count { |build| build['result'] == 'SUCCESS' }
-  latest_build = builds_with_status.first
-  {
-    name: latest_build['fullDisplayName'],
-    status: latest_build['result'] == 'SUCCESS' ? SUCCESS : FAILED,
-    duration: latest_build['duration'] / 1000,
-    link: latest_build['url'],
-    health: calculate_health(successful_count, builds_with_status.count),
-    time: latest_build['timestamp']
-  }
+  if builds.empty?
+    {
+      name: job['id'].gsub('/job/', ' » ').gsub('%252F', '/').camelize,
+      status: UNKNOWN,
+      duration: 0,
+      link: url,
+      health: 0,
+      time: Time.now.getutc.to_i
+    }
+  else
+    builds_with_status = builds.reject { |build| build['result'].nil? }
+    successful_count = builds_with_status.count { |build| build['result'] == 'SUCCESS' }
+    latest_build = builds_with_status.first unless builds_with_status.nil? || builds_with_status.empty?
+    {
+      name: latest_build['fullDisplayName'],
+      status: latest_build['result'] == 'SUCCESS' ? SUCCESS : FAILED,
+      duration: latest_build['duration'] / 1000,
+      link: latest_build['url'],
+      health: calculate_health(successful_count, builds_with_status.count),
+      time: latest_build['timestamp']
+    }
+  end
+
 end
 
 SCHEDULER.every '20s' do
