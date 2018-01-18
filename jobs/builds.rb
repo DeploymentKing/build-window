@@ -3,9 +3,17 @@ require_relative 'build_health'
 
 # The Builds class will extract all the builds to display on the dashboard
 module Builds
-  @jobs = []
+  @@jobs = []
 
-  def get_jenkins_jobs(server_url, project, user, token, parent_job_url)
+  def self.reset
+    @@jobs = job_list
+  end
+
+  def self.get
+    @@jobs
+  end
+
+  def get_jenkins_jobs(server_url, project, user, token, parent_job_url, job_list)
     url = parent_job_url.nil? ? "#{server_url}/job/#{project}/api/json" : "#{parent_job_url}api/json"
 
     job_info = get_url url, [user, token]
@@ -13,7 +21,7 @@ module Builds
 
     if jobs.nil?
       # There are no more sub-jobs so we can extract the build information from here
-      @jobs << {
+      job_list << {
         'id' => parent_job_url.gsub("#{server_url}/job/", ''),
         'project' => project,
         'server_url' => server_url,
@@ -22,19 +30,26 @@ module Builds
       }
     else
       jobs.each do |job|
-        get_jenkins_jobs(server_url, project, user, token, job['url'])
+        get_jenkins_jobs(server_url, project, user, token, job['url'], job_list)
       end
     end
   end
   module_function :get_jenkins_jobs
 
-  contents = Ansible::Vault.read(path: 'config/jenkins.json', password: ENV['VAULT_PASSWORD'])
-  JENKINS_CONFIG = JSON.parse(contents)
-  JENKINS_SERVERS = JENKINS_CONFIG['servers']
+  def job_list
+    puts 'getting job list'
+    jobs = []
 
-  JENKINS_SERVERS.each do |server|
-    get_jenkins_jobs(server['url'], server['id'], server['user'], server['token'], nil)
+    contents = Ansible::Vault.read(path: 'config/jenkins.json', password: ENV['VAULT_PASSWORD'])
+    jenkins_config = JSON.parse(contents)
+    jenkins_servers = jenkins_config['servers']
+
+    jenkins_servers.each do |server|
+      get_jenkins_jobs(server['url'], server['id'], server['user'], server['token'], nil, jobs)
+    end
+
+    # Return list of jobs
+    jobs
   end
-
-  JOB_LIST = @jobs
+  module_function :job_list
 end

@@ -3,7 +3,7 @@
 <div class="gridster">
   <ul>
     <%
-      if (Builds::JOB_LIST.count > 4) then
+      if (Builds.get.count > 4) then
         num_cols = 6
         widget_size = 1
       else
@@ -11,7 +11,7 @@
         widget_size = 2
       end
     %>
-    <% Builds::JOB_LIST.select { |job|job['project'] == File.basename(__FILE__, File.extname(__FILE__)) }.each_with_index do |job,index| %>
+    <% Builds.get.select { |job|job['project'] == File.basename(__FILE__, File.extname(__FILE__)) }.each_with_index do |job,index| %>
       <% build_num = index + 1 %>
       <li data-row="<%= build_num % num_cols == 0 ? build_num / num_cols : build_num / num_cols + 1 %>"
         data-col="<%= build_num % num_cols == 0 ? num_cols : build_num % num_cols %>"

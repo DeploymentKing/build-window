@@ -17,10 +17,6 @@ def get_url(url, auth)
   JSON.parse(response.body)
 end
 
-def calculate_health(successful_count, count)
-  (successful_count / count.to_f * 100).round
-end
-
 def get_jenkins_build_health(job)
   url = "#{job['server_url']}/job/#{job['id']}/api/json?tree=builds[status,timestamp,id,result,duration,url,fullDisplayName]"
 
@@ -44,7 +40,7 @@ def get_jenkins_build_health(job)
       status: latest_build['result'] == 'SUCCESS' ? SUCCESS : FAILED,
       duration: latest_build['duration'] / 1000,
       link: latest_build['url'],
-      health: calculate_health(successful_count, builds_with_status.count),
+      health: (successful_count / builds_with_status.count.to_f * 100).round,
       time: latest_build['timestamp']
     }
   end
@@ -52,7 +48,13 @@ def get_jenkins_build_health(job)
 end
 
 SCHEDULER.every '20s' do
-  Builds::JOB_LIST.each do |job|
+  puts 'get build health'
+  Builds.get.each do |job|
     send_event(job['id'], get_jenkins_build_health(job))
   end
+end
+
+SCHEDULER.every '60s' do
+  puts 'reset jobs list'
+  Builds.reset
 end
